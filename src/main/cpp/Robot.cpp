@@ -440,14 +440,21 @@ void Robot::AutonomousPeriodic() {
 }
 
 void Robot::TeleopInit() {
+    // Set swerve brake to ensure stability
     SwerveTrain::GetInstance().SetSwerveBrake(true);
+    // Set drive brake to ensure stability
     SwerveTrain::GetInstance().SetDriveBrake(true);
+    // Set back Limelight camera mode to normal
     LimelightBack::GetInstance().Normal();
+    // Enable processing for back Limelight camera
     LimelightBack::GetInstance().setProcessing(true);
+    // Disable Lime mode for back Limelight camera
     LimelightBack::GetInstance().setLime(false);
+    // Enable processing for front Limelight camera
     Limelight::GetInstance().setProcessing(true);
-    Limelight::GetInstance().Auto();
+    // Set front Limelight camera to April tag mode
     Limelight::GetInstance().April();
+
     // Create a Pose2d object with arbitrary coordinates
     //frc::Pose2d robotPose(frc::Translation2d(0.0_m, 0.0_m), frc::Rotation2d());
     //NavX::GetInstance().setRobotOrientation(robotPose);    
@@ -456,106 +463,82 @@ void Robot::TeleopInit() {
 
 
 void Robot::TeleopPeriodic() {
-  frc::SmartDashboard::PutNumber("Vertical", Limelight::GetInstance().getVerticalOffset());
-  //SwerveTrain::GetInstance().UpdateOdometry();
-  std::string selectedTeam = team->GetSelected();
-  std::string selectedPlayer = driver->GetSelected();
-//  if (playerOne->GetRawButton(9) && playerOne->GetRawButton(10)) {
-//        SwerveTrain::GetInstance().HardwareZero();
-//        Limelight::GetInstance().setProcessing(true);
-//    }
-  if (playerOne->GetLeftBumper()) {
+    // Update SmartDashboard with vertical offset from Limelight camera
+    frc::SmartDashboard::PutNumber("Vertical", Limelight::GetInstance().getVerticalOffset());
 
-      NavX::GetInstance().Calibrate();
-      NavX::GetInstance().resetYaw();
-  }
-//  if (playerOne->GetRawButton(7)) {
-//        
-//      SwerveTrain::GetInstance().AssumeZeroPosition();
-//  }
+    // Get selected team for control configuration
+    std::string selectedTeam = team->GetSelected();
+    // Get selected player (driver) for control configuration
+    std::string selectedPlayer = driver->GetSelected();
 
-      double x = playerOne->GetLeftX();
-      double y = playerOne->GetLeftY();
-      double z = playerOne->GetRightX();
-      Controller::forceControllerXYZToZeroInDeadzone(x, y, z);
-
-      /*if (playerOne->GetRawButton(2)) {
-          frc::SmartDashboard::PutNumber("z", z);
-      }
-      else {
-
-          z *= R_controllerZMultiplier;
-      }*/
-
-        //Limelight::GetInstance().setLime(false);
-
-    //Intake
-    frc::SmartDashboard::PutNumber("Current", Intake::GetInstance().Current());
-    if (Intake::GetInstance().Current() > 14.5){
-      playerOne->SetRumble(frc::GenericHID::RumbleType::kBothRumble, .55);
-      playerTwo->SetRumble(frc::GenericHID::RumbleType::kBothRumble, .55);
-    } else {
-      playerOne->SetRumble(frc::GenericHID::RumbleType::kBothRumble, 0);
-      playerTwo->SetRumble(frc::GenericHID::RumbleType::kBothRumble, 0);
+    // Calibrate NavX gyro and reset yaw when left bumper is pressed
+    if (playerOne->GetLeftBumper()) {
+        NavX::GetInstance().Calibrate();
+        NavX::GetInstance().resetYaw();
     }
-    
+
+    // Read controller input for drive controls and ensure deadzone correction
+    double x = playerOne->GetLeftX();
+    double y = playerOne->GetLeftY();
+    double z = playerOne->GetRightX();
+    Controller::forceControllerXYZToZeroInDeadzone(x, y, z);
+
+    // Rumble feedback logic based on the current intake current
+    frc::SmartDashboard::PutNumber("Current", Intake::GetInstance().Current());
+    if (Intake::GetInstance().Current() > 14.5) {
+        playerOne->SetRumble(frc::GenericHID::RumbleType::kBothRumble, .55);
+        playerTwo->SetRumble(frc::GenericHID::RumbleType::kBothRumble, .55);
+    } else {
+        playerOne->SetRumble(frc::GenericHID::RumbleType::kBothRumble, 0);
+        playerTwo->SetRumble(frc::GenericHID::RumbleType::kBothRumble, 0);
+    }
+    // Control logic for different player (driver) configurations based on the selected player
     if (selectedPlayer == "Braylon"){
+      // Control logic based on button inputs from player one's controller
       if (playerOne->GetAButton()) {
+          // Activate intake at a speed of 0.65
           Intake::GetInstance().Speed1(.65);
-          if (Item::GetInstance().track() == 0){
-            SwerveTrain::GetInstance().Drive(
-              -x,
-              -y,
-              z,
-              false,
-              false,
-              1
-            );
+          // Check if the item tracking mode is disabled (returning 0 indicates no item found)
+          if (Item::GetInstance().track() == 0) {
+              // Drive the SwerveTrain using controller inputs (-x, -y, z) and default track speed
+              SwerveTrain::GetInstance().Drive(-x, -y, z, false, false, 1);
           } else {
-            SwerveTrain::GetInstance().Drive(
-              -x,
-              -y,
-              Item::GetInstance().track(),
-              false,
-              false,
-              1
-            );
+              // Drive the SwerveTrain using controller inputs (-x, -y, trackSpeed) with tracked speed
+              SwerveTrain::GetInstance().Drive(-x, -y, Item::GetInstance().track(), false, false, 1);
           }
-      } else if (playerOne->GetXButton()){
-        Intake::GetInstance().Speed1(-.65);
-        SwerveTrain::GetInstance().Drive(
-          -x,
-          -y,
-          z,
-          false,
-          false,
-          1
-        );
-      } else if (playerOne->GetRightTriggerAxis() > .25){
-        Pow::GetInstance().Shoot(-.7);
-        April::GetInstance().Aim();
-        Tests::GetInstance().TrackNew();
+      } else if (playerOne->GetXButton()) {
+          // Activate intake in reverse at a speed of -0.65
+          Intake::GetInstance().Speed1(-.65);
+          // Drive the SwerveTrain using controller inputs (-x, -y, z)
+          SwerveTrain::GetInstance().Drive(-x, -y, z, false, false, 1);
+      } else if (playerOne->GetRightTriggerAxis() > .25) {
+          // Shoot at a speed of 70%
+          Pow::GetInstance().Shoot(-.7);
+          // Aim using the April tag system (horizontal)
+          April::GetInstance().Aim();
+          // Tracking the target for angle adjustment (Shooter)
+          Tests::GetInstance().TrackNew();
       } else {
-        SwerveTrain::GetInstance().Drive(
-          -x,
-          -y,
-          z,
-          false,
-          false,
-          1
-        );
-        Intake::GetInstance().Speed1(0);
-        Tests::GetInstance().SetAngle();
-        Pow::GetInstance().Stop();
+          // Drive the SwerveTrain using controller inputs (-x, -y, z)
+          SwerveTrain::GetInstance().Drive(-x, -y, z, false, false, 1);
+          // Deactivate intake
+          Intake::GetInstance().Speed1(0);
+          // Set the angle to low for clearance
+          Tests::GetInstance().SetAngle(); 
+          // Stop shooting
+          Pow::GetInstance().Stop();
       }
-      
-    
-      if (playerOne->GetRightBumper()){
-        Climber::GetInstance().speed(-1);
+
+      // Climber moves Up if right bumper is held then goes down on its own
+      if (playerOne->GetRightBumper()) {
+          // Move the climber up
+          Climber::GetInstance().speed(-1);
       } else {
-        Climber::GetInstance().speed(1);
+          // Move the climber down
+          Climber::GetInstance().speed(1);
       }
     } else {
+      // Aim Tracker
       Tests::GetInstance().TrackRed();
       if (playerOne->GetLeftTriggerAxis() > .15){
         April::GetInstance().Aim();
