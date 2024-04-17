@@ -125,47 +125,49 @@ class Tests {
     void TrackNew(){
         frc::SmartDashboard::PutNumber("Top", m_ClawPotentiometer1->Get());
         frc::SmartDashboard::PutNumber("Bottom", m_ClawPotentiometer2->Get());
-        if (0.0067092916 * Limelight::GetInstance().getVerticalOffset() + .9437390001 > .92){
+        if (0.0067092916 * Limelight::GetInstance().getVerticalOffset() + .9137390001 > .89){
             value = .92;
-        } else if (0.0067092916 * Limelight::GetInstance().getVerticalOffset() + .9497390001 < .83){
+        } else if (0.0067092916 * Limelight::GetInstance().getVerticalOffset() + .9197390001 < .79){
             value = .83;
         } else {
-            value = (0.0067092916 * Limelight::GetInstance().getVerticalOffset() + .9497390001);
+            value = (0.0067092916 * Limelight::GetInstance().getVerticalOffset() + .9197390001);
         }
         frc::SmartDashboard::PutNumber("value", value);
         if (Limelight::GetInstance().getID() ==  3 || Limelight::GetInstance().getID() == 4 || Limelight::GetInstance().getID() == 7 || Limelight::GetInstance().getID() == 8){
             if (m_ClawPotentiometer2->Get() > value + .025 || m_ClawPotentiometer1->Get() > value + .025) {
                 if (m_ClawPotentiometer2->Get() < value){
                     m_ClawActuator1->Set(0);
-                    m_ClawActuator2->Set(1);
+                    m_ClawActuator2->Set(.5);
                 } else if (m_ClawPotentiometer1->Get() < value){
-                    m_ClawActuator1->Set(1);
+                    m_ClawActuator1->Set(.5);
                     m_ClawActuator2->Set(0);
                 } else {
-                    m_ClawActuator1->Set(1);
-                    m_ClawActuator2->Set(1);
+                    m_ClawActuator1->Set(.5);
+                    m_ClawActuator2->Set(.5);
                 }
                 Pow::GetInstance().Feed(0);
             } else if (m_ClawPotentiometer2->Get() < value - .025 || m_ClawPotentiometer1->Get() < value - .025) {
                 if (m_ClawPotentiometer2->Get() > value){
                     m_ClawActuator1->Set(0);
-                    m_ClawActuator2->Set(-1);
+                    m_ClawActuator2->Set(-.5);
                 } else if (m_ClawPotentiometer1->Get() > value){
-                    m_ClawActuator1->Set(-1);
+                    m_ClawActuator1->Set(-.5);
                     m_ClawActuator2->Set(0);
                 } else {
-                    m_ClawActuator1->Set(-1);
-                    m_ClawActuator2->Set(-1);
+                    m_ClawActuator1->Set(-.5);
+                    m_ClawActuator2->Set(-.5);
                 }
                 Pow::GetInstance().Feed(0);
             } else {
                 m_ClawActuator1->Set(0);
                 m_ClawActuator2->Set(0);
                 if (Limelight::GetInstance().getHorizontalOffset() < 3 || Limelight::GetInstance().getHorizontalOffset() > -3){
-                    if (value > .83 && value < 92){
-                        Pow::GetInstance().Feed(.6);
-                    }
-                    Pow::GetInstance().Feed(0);
+                    if (value > .79 && value < .89){
+                        Pow::GetInstance().Feed(.5);
+                        Intake::GetInstance().Speed1(.4);
+                    } else {
+                        Pow::GetInstance().Feed(0);
+                    }        
                 } else {
                     Pow::GetInstance().Feed(0);
                 }

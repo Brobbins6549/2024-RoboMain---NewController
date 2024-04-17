@@ -18,17 +18,15 @@ class Item {
         return *instance;
     }
     double track(){
-        if (LimelightBack::GetInstance().getTarget()){
-            if (LimelightBack::GetInstance().getHorizontalOffset() > 3){
-                return .2;
-            } else if (LimelightBack::GetInstance().getHorizontalOffset() < -3){
-                return -.2;
-            } else {
-                return 0;
-            }
+        frc::SmartDashboard::PutNumber("ItemBackHorizontal", LimelightBack::GetInstance().getHorizontalOffset());
+        if (LimelightBack::GetInstance().getHorizontalOffset() > 15){
+            return .2;
+        } else if (LimelightBack::GetInstance().getHorizontalOffset() < -15){
+            return -.2;
         } else {
             return 0;
         }
+
     }
     private:
 };

@@ -97,10 +97,11 @@ autoChooser->AddOption("NewRightBlue", "NewRightBlue");
 autoChooser->AddOption("NewMidBlue", "NewMidBlue");
 team->AddOption("red", "red");
 team->AddOption("blue", "blue");
-team->AddOption("Braylon", "Braylon");
-team->AddOption("Other", "Other");
+driver->AddOption("Braylon", "Braylon");
+driver->AddOption("Other", "Other");
 frc::SmartDashboard::PutData(autoChooser);
 frc::SmartDashboard::PutData(team);
+frc::SmartDashboard::PutData(driver);
 bigSequence = new AutoSequence(false);
 bigSequence->EnableLogging();
 }
@@ -470,7 +471,7 @@ void Robot::TeleopPeriodic() {
     std::string selectedTeam = team->GetSelected();
     // Get selected player (driver) for control configuration
     std::string selectedPlayer = driver->GetSelected();
-
+    frc::SmartDashboard::PutString("driver", selectedPlayer);
     // Calibrate NavX gyro and reset yaw when left bumper is pressed
     if (playerOne->GetLeftBumper()) {
         NavX::GetInstance().Calibrate();
@@ -480,7 +481,7 @@ void Robot::TeleopPeriodic() {
     // Read controller input for drive controls and ensure deadzone correction
     double x = playerOne->GetLeftX();
     double y = playerOne->GetLeftY();
-    double z = playerOne->GetRightX();
+    double z = playerOne->GetRightX() * .75;
     Controller::forceControllerXYZToZeroInDeadzone(x, y, z);
 
     // Rumble feedback logic based on the current intake current
